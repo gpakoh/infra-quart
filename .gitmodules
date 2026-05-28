@@ -1,3 +1,6 @@
 [submodule "services/opencode-adapter"]
 	path = services/opencode-adapter
 	url = https://github.com/gpakoh/opencode-adapter.git
+[submodule "services/quart-core"]
+	path = services/quart-core
+	url = git@github.com:gpakoh/quart-core.git
