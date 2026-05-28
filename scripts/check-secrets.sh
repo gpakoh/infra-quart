@@ -5,24 +5,29 @@ echo "=== Checking for leaked secrets ==="
 
 errors=0
 
-check_not_tracked() {
-  local pattern="$1"
-  local label="$2"
-  if git ls-files --cached | grep -q "$pattern"; then
-    echo "FAIL: $label ($pattern is tracked in git)"
+check_not_exists() {
+  local label="$1"
+  shift
+  local find_args=("$@")
+
+  local files
+  files=$(find . -path "./.git" -prune -o \( "${find_args[@]}" \) -print 2>/dev/null | head -5 || true)
+  if [ -n "$files" ]; then
+    echo "FAIL: $label (file exists: $(echo "$files" | tr '\n' ' '))"
     errors=$((errors + 1))
-  else
-    echo "OK: $label"
+    return
   fi
+
+  echo "OK: $label"
 }
 
-check_not_tracked '\.env$' ".env file"
-check_not_tracked '\.env\.local$' ".env.local file"
-check_not_tracked '\.env\.backup$' ".env.backup file"
-check_not_tracked 'secrets/.*\.txt$' "secrets/*.txt files"
-check_not_tracked 'secrets/.*\.token$' "secrets/*.token files"
-check_not_tracked 'oauth_creds\.json' "oauth_creds.json files"
-check_not_tracked 'id_ed25519' "SSH private keys"
+check_not_exists ".env file"              -name ".env"
+check_not_exists ".env.local file"         -name ".env.local"
+check_not_exists ".env.backup file"        -name ".env.backup"
+check_not_exists "secrets/*.txt files"     -path "*/secrets/*.txt"
+check_not_exists "secrets/*.token files"   -path "*/secrets/*.token"
+check_not_exists "oauth_creds.json files"  -name "oauth_creds.json"
+check_not_exists "SSH private keys"        -name "id_ed25519*" ! -name "*.pub"
 
 if [ "$errors" -gt 0 ]; then
   echo "FAILED: $errors secret check(s) failed"

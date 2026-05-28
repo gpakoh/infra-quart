@@ -19,8 +19,14 @@ jobs:
       - name: Validate docker-compose config
         run: docker compose config
 
+      - name: Validate config (all profiles)
+        run: |
+          for p in core llm embeddings memory opencode monitoring federation; do
+            docker compose --profile "$p" config > /dev/null
+          done
+
       - name: Test Dockerfile build (opencode-adapter)
         run: docker compose --profile opencode build
 
-      - name: Smoke test (compose syntax only)
-        run: docker compose --profile core --profile llm --profile embeddings config 2>&1 | grep -q "services"
+      - name: Test Dockerfile build (quart-core)
+        run: docker compose --profile core build quart-core

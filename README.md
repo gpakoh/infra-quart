@@ -4,9 +4,9 @@ Orchestration entry point for the quart ecosystem. Contains vendor services, sub
 
 ## Principles
 
-- **No application code** — only orchestration, configuration, and submodule references.
-- **No secrets in git** — `.env.example` with placeholders only.
-- **Profile-based startup** — start only what you need.
+- No application code — only orchestration, configuration, and submodule references.
+- No secrets in git — `.env.example` with placeholders only.
+- Profile-based startup — start only what you need.
 
 ## Quick Start
 
@@ -14,13 +14,10 @@ Orchestration entry point for the quart ecosystem. Contains vendor services, sub
 cp .env.example .env
 # edit .env with your secrets
 
-git submodule update --init --recursive
+make submodules
 
-# Start core (postgres + redis)
+# Start core (postgres + redis + quart-core)
 make up-core
-
-# Start LLM
-make up-llm
 
 # Start OpenCode Adapter
 make up-opencode
@@ -32,8 +29,8 @@ make smoke
 ## Profiles
 
 | Profile | Services | Command |
-|---------|----------|---------|
-| core | postgres, redis | `make up-core` |
+| -- | -- | -- |
+| core | postgres, redis, quart-core | `make up-core` |
 | llm | ollama | `make up-llm` |
 | embeddings | infinity | `make up-embeddings` |
 | memory | zep | `make up-memory` |
@@ -43,16 +40,34 @@ make smoke
 
 ## Submodules
 
-| Path | Repository | Status |
-|------|-----------|--------|
+| Path | Repository | Pinned |
+| -- | -- | -- |
 | services/opencode-adapter | opencode-adapter | v0.2.0 |
+| services/quart-core | quart-core | v0.1.2 |
 
 ### Add a new submodule
 
 ```bash
 git submodule add <url> services/<name>
+cd services/<name> && git checkout <tag> && cd ../..
+git add .gitmodules services/<name>
 git commit -m "feat: add <name> submodule"
 ```
+
+## Ports
+
+| Service | Internal Port | Host Port | Notes |
+| -- | -- | -- | -- |
+| postgres | 5432 | 5432 | |
+| redis | 6379 | — | internal only (host port closed) |
+| quart-core | 5000 | 8000 | configurable via `QUART_CORE_PORT` |
+| ollama | 11434 | 11434 | |
+| infinity | 7997 | 7997 | |
+| zep | 8000 | 8000 | |
+| opencode-adapter | 8007 | 8008 | internal 8007, host 8008 |
+| prometheus | 9090 | 9090 | |
+| grafana | 3000 | 4999 | login: admin / admin |
+| fds | 80 | 8081 | nginx file distribution |
 
 ## Structure
 
@@ -63,7 +78,7 @@ infra-quart/
 ├── Makefile                   # Convenience commands
 ├── scripts/
 │   ├── smoke.sh               # Health checks
-│   └── check-secrets.sh       # Verify no secrets tracked
+│   └── check-secrets.sh       # Verify no secrets on disk or tracked
 ├── secrets/.gitkeep
 ├── deploy/
 │   ├── fds/nginx.conf
@@ -72,19 +87,6 @@ infra-quart/
 │   │   └── grafana-dashboard.json
 │   └── zep/Dockerfile
 └── services/
-    └── opencode-adapter/      # submodule
+    ├── opencode-adapter/      # submodule, v0.2.0
+    └── quart-core/            # submodule, v0.1.2
 ```
-
-## Ports
-
-| Service | Internal | External |
-|---------|----------|----------|
-| postgres | 5432 | 5432 |
-| redis | 6379 | 6379 |
-| ollama | 11434 | 11434 |
-| infinity | 7997 | 7997 |
-| zep | 8000 | 8000 |
-| opencode-adapter | 8007 | 8008 |
-| prometheus | 9090 | 9090 |
-| grafana | 3000 | 4999 |
-| fds | 80 | 8081 |
