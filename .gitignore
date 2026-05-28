@@ -1,0 +1,35 @@
+# infra-quart — no application code, only orchestration
+
+# Secrets (never commit)
+.env
+.env.local
+.env.backup
+secrets/*.txt
+secrets/*.token
+**/oauth_creds.json
+**/id_ed25519
+**/id_ed25519.pub
+
+# Runtime
+logs/
+*.log
+.temp_*
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

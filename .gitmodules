@@ -1,0 +1,3 @@
+[submodule "services/opencode-adapter"]
+	path = services/opencode-adapter
+	url = https://github.com/gpakoh/opencode-adapter.git

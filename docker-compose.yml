@@ -1,0 +1,212 @@
+# ============================================
+# infra-quart — orchestration entry point
+# Profiles: core, llm, embeddings, memory,
+#           opencode, monitoring, federation
+# ============================================
+
+x-logging: &default-logging
+  driver: journald
+  options:
+    tag: "{{.Name}}"
+
+services:
+
+  # ==========================================
+  # Core (profile: core)
+  # ==========================================
+
+  postgres:
+    profile: [core]
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    container_name: RAG_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-raguser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: ${POSTGRES_DB:-rag_vectordb}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-raguser} -d ${POSTGRES_DB:-rag_vectordb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  redis:
+    profile: [core]
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: RAG_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis-data:/data
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  # ==========================================
+  # LLM (profile: llm)
+  # ==========================================
+
+  ollama:
+    profile: [llm]
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    container_name: RAG_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  # ==========================================
+  # Embeddings (profile: embeddings)
+  # ==========================================
+
+  infinity:
+    profile: [embeddings]
+    image: michaelf34/infinity:latest
+    restart: unless-stopped
+    container_name: RAG_infinity
+    ports:
+      - "7997:7997"
+    command: ["--v2", "--port", "7997"]
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  # ==========================================
+  # Memory (profile: memory)
+  # ==========================================
+
+  zep:
+    profile: [memory]
+    build:
+      context: ./deploy/zep
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: RAG_zep
+    ports:
+      - "8000:8000"
+    environment:
+      ZEP_STORE_TYPE: postgres
+      ZEP_DATABASE_URL: postgresql://${POSTGRES_USER:-raguser}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-rag_vectordb}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  # ==========================================
+  # OpenCode Adapter (profile: opencode)
+  # ==========================================
+
+  opencode-adapter:
+    profile: [opencode]
+    build:
+      context: ./services/opencode-adapter
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: RAG_opencode-adapter
+    ports:
+      - "8008:8007"
+    environment:
+      OPENCODE_SERVER_PASSWORD: ${OPENCODE_SERVER_PASSWORD:-change-me}
+      OPENCODE_SERVER_USERNAME: opencode
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - opencode-data:/root/.local/share/opencode
+      - opencode-config:/root/.opencode
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8007/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  # ==========================================
+  # Monitoring (profile: monitoring)
+  # ==========================================
+
+  prometheus:
+    profile: [monitoring]
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    container_name: RAG_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  grafana:
+    profile: [monitoring]
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    container_name: RAG_grafana
+    ports:
+      - "4999:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./deploy/monitoring/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/quart-bot.json
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  # ==========================================
+  # File Distribution Service (profile: federation)
+  # ==========================================
+
+  fds:
+    profile: [federation]
+    image: nginx:alpine
+    restart: unless-stopped
+    container_name: RAG_fds
+    ports:
+      - "8081:80"
+    volumes:
+      - ./deploy/fds/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - infra-net
+    logging: *default-logging
+
+volumes:
+  pgdata:
+  redis-data:
+  ollama-data:
+  prometheus-data:
+  grafana-data:
+  opencode-data:
+  opencode-config:
+
+networks:
+  infra-net:
+    driver: bridge
