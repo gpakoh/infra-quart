@@ -4,3 +4,6 @@
 [submodule "services/quart-core"]
 	path = services/quart-core
 	url = git@github.com:gpakoh/quart-core.git
+[submodule "services/rag-library-service"]
+	path = services/rag-library-service
+	url = git@github.com:gpakoh/rag-library-service.git

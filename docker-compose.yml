@@ -125,6 +125,39 @@ services:
     logging: *default-logging
 
   # ==========================================
+  # RAG Library Service (profiles: core, memory)
+  # ==========================================
+
+  rag-library-service:
+    profiles: [core, memory]
+    build:
+      context: ./services/rag-library-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: RAG_rag_library
+    environment:
+      PORT: "8010"
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-raguser}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-rag_vectordb}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "${RAG_LIBRARY_PORT:-8010}:8010"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  # ==========================================
   # Memory (profile: memory)
   # ==========================================
 

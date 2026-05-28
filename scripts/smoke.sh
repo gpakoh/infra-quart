@@ -5,6 +5,7 @@ echo "=== infra-quart smoke tests ==="
 
 QUART_CORE_PORT="${QUART_CORE_PORT:-8000}"
 OPENCODE_ADAPTER_PORT="${OPENCODE_ADAPTER_PORT:-8008}"
+RAG_LIBRARY_PORT="${RAG_LIBRARY_PORT:-8010}"
 OLLAMA_PORT="${OLLAMA_PORT:-11434}"
 INFINITY_PORT="${INFINITY_PORT:-7997}"
 
@@ -34,6 +35,11 @@ fi
 # OpenCode adapter
 if docker ps -q --filter "name=RAG_opencode-adapter" | grep -q .; then
   check "OpenCode Adapter" "http://localhost:${OPENCODE_ADAPTER_PORT}/health"
+fi
+
+# RAG Library Service
+if docker ps -q --filter "name=RAG_rag_library" | grep -q .; then
+  check "RAG Library" "http://localhost:${RAG_LIBRARY_PORT}/health"
 fi
 
 # Ollama
