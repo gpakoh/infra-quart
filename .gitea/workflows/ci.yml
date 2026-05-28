@@ -1,0 +1,26 @@
+name: infra-quart CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Check leaked secrets
+        run: ./scripts/check-secrets.sh
+
+      - name: Validate docker-compose config
+        run: docker compose config
+
+      - name: Test Dockerfile build (opencode-adapter)
+        run: docker compose --profile opencode build
+
+      - name: Smoke test (compose syntax only)
+        run: docker compose --profile core --profile llm --profile embeddings config 2>&1 | grep -q "services"
