@@ -80,11 +80,15 @@ services:
       ADMIN_API_KEY: ${ADMIN_API_KEY:-change-me}
       FEDERATION_SECRET: ${FEDERATION_SECRET:-change-me}
       ZEP_API_URL: ${ZEP_API_URL:-http://zep:8000}
+      RAG_LIBRARY_ENABLED: ${RAG_LIBRARY_ENABLED:-true}
+      RAG_LIBRARY_URL: ${RAG_LIBRARY_URL:-http://rag-library-service:8010}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_started
+      rag-library-service:
+        condition: service_healthy
     ports:
       - "${QUART_CORE_PORT:-8000}:5000"
     networks:
