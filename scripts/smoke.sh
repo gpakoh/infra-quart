@@ -42,6 +42,54 @@ if docker ps -q --filter "name=RAG_rag_library" | grep -q .; then
   check "RAG Library" "http://localhost:${RAG_LIBRARY_PORT}/health"
 fi
 
+# Document CRUD flow (requires rag-library-service)
+crud_flow() {
+  local base="$1"
+  local bot_id="${2:-smoke-bot}"
+  local doc_id="${3:-smoke/test.txt}"
+  local doc_content="${4:-Hello from smoke test}"
+
+  echo "--- Document CRUD flow (bot=$bot_id, doc=$doc_id) ---"
+
+  # Create
+  echo -n "  CREATE: "
+  resp=$(curl -sf -X POST "$base/v1/documents" \
+    -H "Content-Type: application/json" \
+    -d "{\"document_id\":\"$doc_id\",\"bot_id\":\"$bot_id\",\"content\":\"$doc_content\"}" 2>&1) && echo "OK" || { echo "FAIL"; return 1; }
+
+  # List
+  echo -n "  LIST:   "
+  curl -sf "$base/v1/documents?bot_id=$bot_id" &>/dev/null && echo "OK" || { echo "FAIL"; return 1; }
+
+  # Get
+  echo -n "  GET:    "
+  curl -sf "$base/v1/documents/$doc_id?bot_id=$bot_id" &>/dev/null && echo "OK" || { echo "FAIL"; return 1; }
+
+  # Delete
+  echo -n "  DELETE: "
+  curl -sf -X DELETE "$base/v1/documents/$doc_id?bot_id=$bot_id" &>/dev/null && echo "OK" || { echo "FAIL"; return 1; }
+
+  # Verify 404 after delete
+  echo -n "  VERIFY 404: "
+  if curl -sf "$base/v1/documents/$doc_id?bot_id=$bot_id" &>/dev/null; then
+    echo "FAIL (still exists)"
+    return 1
+  else
+    echo "OK (deleted)"
+  fi
+
+  echo "--- Document CRUD flow passed ---"
+}
+
+# RAG Library — CRUD
+if docker ps -q --filter "name=RAG_rag_library" | grep -q .; then
+  if crud_flow "http://localhost:${RAG_LIBRARY_PORT}"; then
+    :
+  else
+    all_ok=false
+  fi
+fi
+
 # Ollama
 if docker ps -q --filter "name=RAG_ollama" | grep -q .; then
   echo -n "Ollama: "
