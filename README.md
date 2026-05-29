@@ -43,8 +43,9 @@ make smoke
 | Path | Repository | Pinned |
 | -- | -- | -- |
 | services/opencode-adapter | opencode-adapter | v0.2.0 |
-| services/quart-core | quart-core | v0.1.4 |
-| services/rag-library-service | rag-library-service | v0.1.1 |
+| services/quart-core | quart-core | v0.1.5 |
+| services/rag-library-service | rag-library-service | v0.1.2 |
+| services/quart-ollama_bot | quart-ollama_bot | v0.1.1 |
 
 ### Add a new submodule
 
