@@ -9,6 +9,8 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
+      - name: Configure git to use Gitea for submodules
+        run: git config --global url."http://192.168.1.103:3005/gpakoh/".insteadOf "git@github.com:gpakoh/"
       - uses: actions/checkout@v4
         with:
           submodules: recursive
