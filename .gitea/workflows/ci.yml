@@ -9,8 +9,8 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Configure git to use Gitea for submodules
-        run: git config --global url."http://192.168.1.103:3005/gpakoh/".insteadOf "git@github.com:gpakoh/"
+      - name: Install SSH client for submodule checkout
+        run: apt-get update -qq && apt-get install -y -qq openssh-client 2>&1 | tail -3
       - uses: actions/checkout@v4
         with:
           submodules: recursive
