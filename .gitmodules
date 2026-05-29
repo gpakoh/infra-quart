@@ -7,3 +7,6 @@
 [submodule "services/rag-library-service"]
 	path = services/rag-library-service
 	url = git@github.com:gpakoh/rag-library-service.git
+[submodule "services/quart-ollama_bot"]
+	path = services/quart-ollama_bot
+	url = git@github.com:gpakoh/quart-ollama_bot.git

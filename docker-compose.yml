@@ -162,6 +162,36 @@ services:
     logging: *default-logging
 
   # ==========================================
+  # Bot (profile: bot)
+  # ==========================================
+
+  quart-ollama-bot:
+    profiles: [bot]
+    build:
+      context: ./services/quart-ollama_bot
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: RAG_ollama_bot
+    env_file:
+      - .env
+    environment:
+      DOCUMENT_API_ENABLED: ${DOCUMENT_API_ENABLED:-true}
+      QUART_CORE_URL: ${QUART_CORE_URL:-http://quart-core:8000}
+      QUART_CORE_TIMEOUT: ${QUART_CORE_TIMEOUT:-10}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      quart-core:
+        condition: service_healthy
+      rag-library-service:
+        condition: service_healthy
+    networks:
+      - infra-net
+    logging: *default-logging
+
+  # ==========================================
   # Memory (profile: memory)
   # ==========================================
 
