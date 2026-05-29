@@ -16,7 +16,7 @@ services:
   # ==========================================
 
   postgres:
-    profiles: [core]
+    profiles: [core, memory]
     image: pgvector/pgvector:pg16
     restart: unless-stopped
     container_name: RAG_postgres
@@ -133,7 +133,7 @@ services:
   # ==========================================
 
   rag-library-service:
-    profiles: [core, memory]
+    profiles: [core]
     build:
       context: ./services/rag-library-service
       dockerfile: Dockerfile
