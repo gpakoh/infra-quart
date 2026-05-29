@@ -30,7 +30,7 @@ make smoke
 
 | Profile | Services | Command |
 | -- | -- | -- |
-| core | postgres, redis, quart-core | `make up-core` |
+| core | postgres, redis, rag-library-service, quart-core | `make up-core` |
 | llm | ollama | `make up-llm` |
 | embeddings | infinity | `make up-embeddings` |
 | memory | zep | `make up-memory` |
@@ -43,7 +43,8 @@ make smoke
 | Path | Repository | Pinned |
 | -- | -- | -- |
 | services/opencode-adapter | opencode-adapter | v0.2.0 |
-| services/quart-core | quart-core | v0.1.2 |
+| services/quart-core | quart-core | v0.1.4 |
+| services/rag-library-service | rag-library-service | v0.1.1 |
 
 ### Add a new submodule
 
@@ -61,6 +62,7 @@ git commit -m "feat: add <name> submodule"
 | postgres | 5432 | 5432 | |
 | redis | 6379 | — | internal only (host port closed) |
 | quart-core | 5000 | 8000 | configurable via `QUART_CORE_PORT` |
+| rag-library-service | 5001 | 8010 | configurable via `RAG_LIBRARY_PORT` |
 | ollama | 11434 | 11434 | |
 | infinity | 7997 | 7997 | |
 | zep | 8000 | 8000 | |
@@ -77,7 +79,7 @@ infra-quart/
 ├── .env.example               # Environment template
 ├── Makefile                   # Convenience commands
 ├── scripts/
-│   ├── smoke.sh               # Health checks
+│   ├── smoke.sh               # Health checks + document CRUD flow
 │   └── check-secrets.sh       # Verify no secrets on disk or tracked
 ├── secrets/.gitkeep
 ├── deploy/
@@ -86,7 +88,8 @@ infra-quart/
 │   │   ├── prometheus.yml
 │   │   └── grafana-dashboard.json
 │   └── zep/Dockerfile
-└── services/
+    ├── services/
     ├── opencode-adapter/      # submodule, v0.2.0
-    └── quart-core/            # submodule, v0.1.2
+    ├── quart-core/            # submodule, v0.1.4
+    └── rag-library-service/   # submodule, v0.1.1
 ```

@@ -30,3 +30,6 @@ jobs:
 
       - name: Test Dockerfile build (quart-core)
         run: docker compose --profile core build quart-core
+
+      - name: Test Dockerfile build (rag-library-service)
+        run: docker compose --profile core --profile memory build rag-library-service
