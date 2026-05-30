@@ -92,5 +92,24 @@ infra-quart/
     ├── services/
     ├── opencode-adapter/      # submodule, v0.2.0
     ├── quart-core/            # submodule, v0.1.4
-    └── rag-library-service/   # submodule, v0.1.1
+    	└── rag-library-service/   # submodule, v0.1.1
 ```
+
+## Database Image
+
+The `postgres` service uses a custom image built from `services/database/Dockerfile`.
+
+| Property | Value |
+| -- | -- |
+| Base image | `pgvector/pgvector:pg16` |
+| Included extensions | pgvector v0.8.2, Apache AGE v1.6.0 |
+| Release tag | `quart-database:latest` |
+| Container name | `RAG_postgres` |
+| Port | `5432:5432` |
+
+Apache AGE v1.6.0 is compiled from source (`release/PG16/1.6.0` branch) at image build time. Init scripts at `/docker-entrypoint-initdb.d/` create `vector` and `age` extensions on first start.
+
+**Limitation:** AGE compilation adds ~160–180 seconds to image build. Future improvements:
+- Publish prebuilt `quart-database` image to a registry (CI or ghcr)
+- Pin AGE source checksum for reproducible builds
+- Use Docker build cache to skip rebuild when source is unchanged

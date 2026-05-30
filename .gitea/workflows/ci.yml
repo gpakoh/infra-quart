@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install SSH client for submodule checkout
-        run: apt-get update -qq && apt-get install -y -qq openssh-client 2>&1 | tail -3
+        run: apt-get update -qq && apt-get install -y -qq git openssh-client 2>&1 | tail -3
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -35,3 +35,15 @@ jobs:
 
       - name: Test Dockerfile build (rag-library-service)
         run: docker compose --profile core --profile memory build rag-library-service
+
+  build-database:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Install SSH client for submodule checkout
+        run: apt-get update -qq && apt-get install -y -qq git openssh-client 2>&1 | tail -3
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build custom database image (pgvector + AGE)
+        run: docker compose --profile core build postgres

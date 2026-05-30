@@ -17,7 +17,10 @@ services:
 
   postgres:
     profiles: [core, memory]
-    image: pgvector/pgvector:pg16
+    build:
+      context: ./services/database
+      dockerfile: Dockerfile
+    image: quart-database:latest
     restart: unless-stopped
     container_name: RAG_postgres
     environment:
@@ -70,6 +73,11 @@ services:
       APP_PORT: "5000"
       LOG_FORMAT: json
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DATABASE: ${POSTGRES_DB:-rag_vectordb}
+      POSTGRES_USER: ${POSTGRES_USER:-raguser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
       RAG_DB_HOST: postgres
       RAG_DB_PORT: "5432"
       RAG_DB_USER: ${POSTGRES_USER:-raguser}

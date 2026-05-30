@@ -1,4 +1,4 @@
-.PHONY: help submodules check-secrets config build-core up-core up-llm up-embeddings up-memory up-opencode up-monitoring up-federation up-all smoke logs down clean
+.PHONY: help submodules check-secrets config build-db build-core build-opencode up-db up-core up-llm up-embeddings up-memory up-opencode up-monitoring up-federation up-all check-db-extensions smoke logs down clean
 
 help:
 	@echo "infra-quart — orchestration entry point"
@@ -9,10 +9,12 @@ help:
 	@echo "  check-secrets  Verify no secrets leaked into repo"
 	@echo ""
 	@echo "Build:"
+	@echo "  build-db       Build custom database image (pgvector + AGE)"
 	@echo "  build-core     Build quart-core image"
 	@echo "  build-opencode Build opencode-adapter image"
 	@echo ""
 	@echo "Start services (profiles):"
+	@echo "  up-db          Start postgres only (database service)"
 	@echo "  up-core        Start postgres + redis + quart-core"
 	@echo "  up-llm         Start Ollama"
 	@echo "  up-embeddings  Start Infinity"
@@ -23,6 +25,7 @@ help:
 	@echo "  up-all         Start everything"
 	@echo ""
 	@echo "Management:"
+	@echo "  check-db-extensions  Check AGE and vector extensions in postgres"
 	@echo "  down           Stop all services"
 	@echo "  clean          Stop + remove volumes"
 	@echo "  smoke          Run smoke tests"
@@ -37,11 +40,17 @@ check-secrets:
 config:
 	docker compose config
 
+build-db:
+	docker compose --profile core build postgres
+
 build-core:
 	docker compose --profile core build quart-core
 
 build-opencode:
 	docker compose --profile opencode build opencode-adapter
+
+up-db:
+	docker compose --profile core up -d postgres
 
 up-core:
 	docker compose --profile core up -d --build
@@ -72,6 +81,9 @@ down:
 
 clean:
 	docker compose down -v
+
+check-db-extensions:
+	bash scripts/check-db-extensions.sh
 
 smoke:
 	bash scripts/smoke.sh
