@@ -43,7 +43,7 @@ make smoke
 | Path | Repository | Pinned |
 | -- | -- | -- |
 | services/opencode-adapter | opencode-adapter | v0.2.0 |
-| services/quart-core | quart-core | v0.1.5 |
+| services/quart-core | quart-core | v0.1.6 |
 | services/rag-library-service | rag-library-service | v0.1.2 |
 | services/quart-ollama_bot | quart-ollama_bot | v0.1.1 |
 
@@ -91,7 +91,7 @@ infra-quart/
 │   └── zep/Dockerfile
     ├── services/
     ├── opencode-adapter/      # submodule, v0.2.0
-    ├── quart-core/            # submodule, v0.1.4
+    	├── quart-core/            # submodule, v0.1.6
     	└── rag-library-service/   # submodule, v0.1.1
 ```
 
@@ -113,3 +113,13 @@ Apache AGE v1.6.0 is compiled from source (`release/PG16/1.6.0` branch) at image
 - Publish prebuilt `quart-database` image to a registry (CI or ghcr)
 - Pin AGE source checksum for reproducible builds
 - Use Docker build cache to skip rebuild when source is unchanged
+
+## LightRAG Storage
+
+LightRAG defaults to file-based storage. To use PostgreSQL-backed storage:
+
+```bash
+LIGHTRAG_STORAGE_BACKEND=postgres docker compose --profile core --profile memory up -d --build
+```
+
+This enables PGKVStorage, PGVectorStorage, PGGraphStorage, and PGDocStatusStorage with workspace isolation per bot.
